@@ -1,0 +1,15 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.a30501.pigmanboxmd.activity.MainActivity">
+    <item
+        android:id="@+id/action_money"
+        android:icon="@mipmap/ic_money"
+        android:title="@string/money"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_help"
+        android:icon="@mipmap/ic_help"
+        android:title="@string/help"
+        app:showAsAction="always" />
+</menu>
