@@ -15,15 +15,32 @@ public class Mod{
     private String name;
     private String author;
     private String description;
-    private List<String> tags;
+    private List<String> tags = new ArrayList<>();
+//    {
+//        id = ModUtils.createId();
+//        exist = false;
+//        name = "Default:" + id;
+//        author = "Default";
+//        description = this.name;
+//        tags = new ArrayList<>();
+//    }
+//    public Mod() throws Exception {
+//        this.id = ModUtils.createId();
+//        this.exist = false;
+//        this.name = "Default:" + id;
+//        this.author = "Default";
+//        this.description = this.name;
+//        this.tags = new ArrayList<>();
+//    }
 
-    public Mod() throws Exception {
-        this.id = ModUtils.createId();
-        this.exist = false;
-        this.name = "Default:" + id;
-        this.author = "Default";
-        this.description = this.name;
-        this.tags = new ArrayList<>();
+    public Mod(){}
+
+    public Mod(int id, boolean exist, String name, String author, String description) {
+        this.id = id;
+        this.exist = exist;
+        this.name = name;
+        this.author = author;
+        this.description = description;
     }
 
     public int getId() {

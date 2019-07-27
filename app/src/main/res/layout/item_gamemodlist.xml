@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--游戏mod列表的item-->
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/ig_CarDview"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    app:cardCornerRadius="4dp"
+    app:cardUseCompatPadding="true">
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/ig_ImageView"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:padding="3dp"
+            app:srcCompat="@mipmap/modicon_placeholder"
+            android:contentDescription="@string/mod_icon" />
+
+        <TextView
+            android:id="@+id/ig_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="2"
+            android:maxLines="1"
+            android:text="@string/name"
+            android:textColor="@color/primary_text"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@+id/ig_ImageView"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/ig_author"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:maxLines="1"
+            android:text="@string/author"
+            android:textColor="@color/secondary_text"
+            android:textSize="16sp"
+            app:layout_constraintStart_toEndOf="@+id/ig_ImageView"
+            app:layout_constraintTop_toBottomOf="@+id/ig_name" />
+
+        <TextView
+            android:id="@+id/ig_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:maxLines="1"
+            android:text="@string/description"
+            android:textColor="@color/secondary_text"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toStartOf="@+id/ig_button"
+            app:layout_constraintStart_toEndOf="@+id/ig_ImageView"
+            app:layout_constraintTop_toBottomOf="@+id/ig_author" />
+
+        <Button
+            android:id="@+id/ig_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:layout_weight="1"
+            android:text="@string/uninstall"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </android.support.constraint.ConstraintLayout>
+
+</android.support.v7.widget.CardView>

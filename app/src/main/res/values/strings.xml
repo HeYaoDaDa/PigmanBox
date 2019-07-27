@@ -4,4 +4,9 @@
     <string name="help">Help</string>
     <string name="download">下载</string>
     <string name="game">游戏</string>
+    <string name="name">name:</string>
+    <string name="author">author:</string>
+    <string name="description">description:</string>
+    <string name="uninstall">卸载</string>
+    <string name="mod_icon">Mod Icon</string>
 </resources>
