@@ -16,7 +16,6 @@ import com.example.none.pigmanbox.R;
 import com.example.none.pigmanbox.modle.Mod;
 import com.example.none.pigmanbox.util.ModUtils;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**

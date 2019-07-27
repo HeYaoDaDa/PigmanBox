@@ -24,6 +24,12 @@ public class Game {
         this.obbFile = new File("");
     }
 
+    public Game(String gameName, String packName, File obbFile) {
+        this.gameName = gameName;
+        this.packName = packName;
+        this.obbFile = obbFile;
+    }
+
     public String getGameName() {
         return gameName;
     }

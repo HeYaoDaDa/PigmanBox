@@ -16,22 +16,6 @@ public class Mod{
     private String author;
     private String description;
     private List<String> tags = new ArrayList<>();
-//    {
-//        id = ModUtils.createId();
-//        exist = false;
-//        name = "Default:" + id;
-//        author = "Default";
-//        description = this.name;
-//        tags = new ArrayList<>();
-//    }
-//    public Mod() throws Exception {
-//        this.id = ModUtils.createId();
-//        this.exist = false;
-//        this.name = "Default:" + id;
-//        this.author = "Default";
-//        this.description = this.name;
-//        this.tags = new ArrayList<>();
-//    }
 
     public Mod(){}
 
