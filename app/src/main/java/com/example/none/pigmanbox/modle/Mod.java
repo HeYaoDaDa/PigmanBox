@@ -103,4 +103,16 @@ public class Mod{
     public int hashCode() {
         return Objects.hash(id, exist, name, author, description, tags);
     }
+
+    @Override
+    public String toString() {
+        return "Mod{" +
+                "id=" + id +
+                ", exist=" + exist +
+                ", name='" + name + '\'' +
+                ", author='" + author + '\'' +
+                ", description='" + description + '\'' +
+                ", tags=" + tags +
+                '}';
+    }
 }

@@ -1,5 +1,7 @@
 package com.example.none.pigmanbox.util;
 
+import android.util.Log;
+
 import com.blankj.utilcode.util.FileUtils;
 import com.example.none.pigmanbox.modle.Mod;
 
@@ -278,5 +280,92 @@ public interface ModUtils {
         }else {
             return readModInfoList(new ZipFile(file));
         }
+    }
+    /**
+     * zip is mod
+     *
+     * @param zipFile zip
+     * @return ismod
+     * @throws ZipException no mod
+     */
+    public static boolean isMod(ZipFile zipFile) throws ZipException {
+        List<FileHeader> fileHeaders = zipFile.getFileHeaders();
+        for (FileHeader fileHeader : fileHeaders) {
+            if (fileHeader.getFileName().endsWith(SettingUtils.MOD_MODINFO_NAME))
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * unzip mod
+     *
+     * @param mod mod
+     * @param runnable Callback
+     */
+    public static void unzipModZip2(final ZipFile zipFile, final Mod mod, final Runnable runnable) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (!isMod(zipFile))
+                        throw new Exception("压缩包不为mod");
+                    File filePath = new File(PathUtils.tempPath);//先统一放到临时文件夹中
+                    if (!zipFile.isValidZipFile()) { //
+                        throw new ZipException("no zip!");
+                    }
+
+                    if (filePath.isDirectory() && !filePath.exists()) {
+                        filePath.mkdir();
+                    }
+                    if (zipFile.isEncrypted()) {
+                        zipFile.setPassword(SettingUtils.ZIP_PASSWOID); // 设置解压密码
+                    }
+                    zipFile.setRunInThread(false); //true 在子线程中进行解压 , false主线程中解压
+                    zipFile.extractAll(filePath.getPath()); //将压缩文件解压到filePath中...
+
+
+                    File temp = new File(PathUtils.tempPath);//临时文件目录
+                    List<File> fileList = FileUtils.listFilesInDir(temp, true);
+
+
+                    mobileMod(mod, fileList, runnable);
+//                    zipFile.getFile().delete();//删除zip文件
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * moblie mod to app/mods/
+     *
+     */
+    public static void mobileMod(final Mod mod, final List<File> fileList, final Runnable runnable) {
+        new Thread(() -> {
+            final File modPath = new File(PathUtils.modPath + ModUtils.getModDirName(mod));//mod目的地路径
+            FileUtils.createOrExistsDir(modPath);//判断目录是否存在，不存在则判断是否创建成功
+            File modFile = null;//模组文件
+            for (File file : fileList) {//找到modinfo.lua
+                if (file.getName().equals(SettingUtils.MOD_MODINFO_NAME)) {
+                    modFile = file.getParentFile();
+                    break;
+                }
+            }
+            //如果没有找到就返回
+            if (modFile == null) {
+                PathUtils.clearTemp();
+                return;
+            }
+            FileUtils.moveDir(modFile, modPath, new FileUtils.OnReplaceListener() {
+                @Override
+                public boolean onReplace() {//开始移动目录
+                    runnable.run();
+                    return true;
+                }
+            });
+            PathUtils.clearTemp();
+        }).start();
     }
 }

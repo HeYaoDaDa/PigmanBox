@@ -46,8 +46,8 @@ public class FinishModListAdapter extends RecyclerView.Adapter<FinishModListAdap
         }
     }
 
-    public FinishModListAdapter(Mod[] mods) {
-        this.modList = ModUtils.getFinishMods();
+    public FinishModListAdapter(List<Mod> modList) {
+        this.modList = modList;
     }
 
     @NonNull

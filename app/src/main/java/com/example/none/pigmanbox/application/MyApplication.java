@@ -39,6 +39,7 @@ public class MyApplication extends Application {
 
         Utils.init(context);
         PathUtils.init(context);
+        CaocConfig.Builder.create().enabled(true).apply();
     }
 
     public static Context getContext() {
