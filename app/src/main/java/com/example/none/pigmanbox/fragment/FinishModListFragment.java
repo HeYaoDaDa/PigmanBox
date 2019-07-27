@@ -54,6 +54,9 @@ public class FinishModListFragment extends BaseFragment {
         mRecyclerView.setAdapter(mFinishModListAdapter);
         mSwipeRefreshLayout.setRefreshing(true);
         mSwipeRefreshLayout.setOnRefreshListener(this::onLazyLoad);
+        mFloatingActionButton.setOnClickListener(v -> {
+            ModUtils.mods[4444].getId();
+        });
     }
 
     /**

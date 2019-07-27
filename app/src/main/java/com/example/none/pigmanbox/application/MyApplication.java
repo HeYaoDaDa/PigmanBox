@@ -1,5 +1,6 @@
 package com.example.none.pigmanbox.application;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -9,6 +10,9 @@ import android.widget.Toast;
 import com.blankj.utilcode.util.Utils;
 import com.example.none.pigmanbox.util.PathUtils;
 
+import cat.ereza.customactivityoncrash.CustomActivityOnCrash;
+import cat.ereza.customactivityoncrash.config.CaocConfig;
+
 /**
  * My application
  */
@@ -17,6 +21,8 @@ public class MyApplication extends Application {
     private static PackageInfo packageInfo;
 
 
+
+    @SuppressLint("RestrictedApi")
     @Override
     public void onCreate() {
         super.onCreate();
