@@ -13,6 +13,7 @@ import android.view.MenuItem;
 
 import com.example.none.pigmanbox.R;
 import com.example.none.pigmanbox.fragment.FinishModListFragment;
+import com.example.none.pigmanbox.fragment.GameListFragment;
 import com.example.none.pigmanbox.util.PathUtils;
 
 public class MainActivity extends AppCompatActivity {
@@ -85,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
                 }
         );
         mViewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
-            private Fragment[] mFragments = new Fragment[]{new FinishModListFragment()};
+            private Fragment[] mFragments = new Fragment[]{new FinishModListFragment(),new GameListFragment()};
 
             @Override
             public Fragment getItem(int i) {
