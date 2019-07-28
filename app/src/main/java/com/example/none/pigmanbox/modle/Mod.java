@@ -80,12 +80,17 @@ public class Mod{
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Mod mod = (Mod) o;
-        return id == mod.id;
+        return id == mod.id &&
+                Objects.equals(name, mod.name) &&
+                Objects.equals(author, mod.author) &&
+                Objects.equals(description, mod.description) &&
+                Objects.equals(tags, mod.tags);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, exist, name, author, description, tags);
+
+        return Objects.hash(id, name, author, description, tags);
     }
 
     @Override

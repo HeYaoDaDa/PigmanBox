@@ -85,7 +85,7 @@ public class GameModListAdapter extends RecyclerView.Adapter<GameModListAdapter.
 //        RequestOptions requestOptions = new RequestOptions();
 //        requestOptions.placeholder(R.mipmap.modicon_placeholder);
 //        Glide.with(MyApplication.getContext()).load(iconUrl).apply(requestOptions).into(viewHolder.icon);
-        viewHolder.name.setText(mod.getName());
+        viewHolder.name.setText(mod.getId()+"/"+mod.getName());
         viewHolder.author.setText(mod.getAuthor());
         viewHolder.description.setText(mod.getDescription());
         viewHolder.button.setText("卸载");

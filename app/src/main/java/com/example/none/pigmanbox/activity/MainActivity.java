@@ -7,17 +7,14 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.example.none.pigmanbox.R;
 import com.example.none.pigmanbox.fragment.FinishModListFragment;
 import com.example.none.pigmanbox.fragment.GameListFragment;
-import com.example.none.pigmanbox.util.PathUtils;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "MainActivity";
 
     private Toolbar mToolbar;
     private ViewPager mViewPager;
@@ -31,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
         initView();
         initData();
         initEvent();
-        Log.d(TAG, "onCreate: " + PathUtils.fileRootPath);
     }
 
     @Override
@@ -86,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
                 }
         );
         mViewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
-            private Fragment[] mFragments = new Fragment[]{new FinishModListFragment(),new GameListFragment()};
+            private Fragment[] mFragments = new Fragment[]{new FinishModListFragment(), new GameListFragment()};
 
             @Override
             public Fragment getItem(int i) {

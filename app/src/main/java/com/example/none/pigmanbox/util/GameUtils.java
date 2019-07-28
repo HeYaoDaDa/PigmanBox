@@ -70,8 +70,18 @@ public interface GameUtils {
                     }
                 }else {
                     Mod mod = ModUtils.createMod(Zip4jUtils.readZipFileContent(zipFile,fileHeader),modFileName,false);
-                    ModUtils.mods[mod.getId()] = mod;
-                    game.getModList().add(mod);
+                    boolean isSuccess = false;
+                    for (Mod mod1:ModUtils.mods){
+                        if (mod1!=null&&mod.getName().equals(mod1.getName())&&mod.getAuthor().equals(mod1.getAuthor())&&mod.getDescription().equals(mod1.getDescription())){
+                            game.getModList().add(mod1);
+                            isSuccess = true;
+                            break;
+                        }
+                    }
+                    if (!isSuccess){
+                        ModUtils.mods[mod.getId()] = mod;
+                        game.getModList().add(mod);
+                    }
                 }
             }
         }
