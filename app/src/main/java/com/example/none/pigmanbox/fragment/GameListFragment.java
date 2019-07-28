@@ -48,8 +48,6 @@ public class GameListFragment extends BaseFragment {
                     fragment.setArguments(bundle);
                     fragments.add(fragment);
                 }
-            } catch (ZipException e) {
-                e.printStackTrace();
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {

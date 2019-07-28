@@ -19,7 +19,6 @@
         android:id="@+id/am_ViewPager"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toTopOf="@+id/am_BottonNavigationView"
         app:layout_constraintTop_toBottomOf="@+id/am_Toolbar"
         tools:ignore="MissingConstraints"
