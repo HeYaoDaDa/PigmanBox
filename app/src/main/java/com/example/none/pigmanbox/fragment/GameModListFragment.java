@@ -13,6 +13,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.example.none.pigmanbox.R;
 import com.example.none.pigmanbox.adapter.GameModListAdapter;
@@ -30,9 +31,10 @@ import static com.blankj.utilcode.util.Utils.runOnUiThread;
 public class GameModListFragment extends BaseFragment {
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-
     private FloatingActionButton mFloatingActionButton;
     private FloatingActionButton mFloatingActionButton2;
+    private TextView mTextView;
+
     private ProgressDialog mProgressDialog;
 
     private GameModListAdapter mGameModListAdapter;
@@ -55,6 +57,7 @@ public class GameModListFragment extends BaseFragment {
             }
             runOnUiThread(() -> {
                 initSaveButton();
+                initTextView();
                 mSwipeRefreshLayout.setRefreshing(false);
             });
         }).start();
@@ -69,6 +72,7 @@ public class GameModListFragment extends BaseFragment {
         mSwipeRefreshLayout = view.findViewById(R.id.fgml_SwipeRefreshLayout);
         mFloatingActionButton = view.findViewById(R.id.fgml_FloatingActionButton);
         mFloatingActionButton2 = view.findViewById(R.id.fgml_FloatingActionButton2);
+        mTextView = view.findViewById(R.id.fgml_TextView);
 
         initData();
         LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
@@ -101,6 +105,17 @@ public class GameModListFragment extends BaseFragment {
         }
     }
 
+    /**
+     * init ViewText
+     */
+    private void initTextView(){
+        initData();
+        if (mGame.getModList().size()>0||planAddModlist.size() > 0 || planDeleterModlist.size() > 0){
+            mTextView.setVisibility(View.GONE);
+        }else {
+            mTextView.setVisibility(View.VISIBLE);
+        }
+    }
     /**
      * initData
      */

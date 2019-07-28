@@ -12,6 +12,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.none.pigmanbox.R;
@@ -31,6 +32,7 @@ public class FinishModListFragment extends BaseFragment {
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private FloatingActionButton mFloatingActionButton;
+    private TextView mTextView;
 
     private ProgressDialog mProgressDialog;
 
@@ -49,6 +51,7 @@ public class FinishModListFragment extends BaseFragment {
             runOnUiThread(() -> {
                 mModList.clear();
                 mModList.addAll(ModUtils.getFinishMods());
+                initTextView();
                 mFinishModListAdapter.notifyDataSetChanged();
                 mSwipeRefreshLayout.setRefreshing(false);
             });
@@ -61,6 +64,7 @@ public class FinishModListFragment extends BaseFragment {
         mRecyclerView = view.findViewById(R.id.ffml_RecylerView);
         mSwipeRefreshLayout = view.findViewById(R.id.ffml_SwipereFreshLayout);
         mFloatingActionButton = view.findViewById(R.id.ffml_FloatingActionButton);
+        mTextView = view.findViewById(R.id.ffml_TextView);
         return view;
     }
 
@@ -112,6 +116,17 @@ public class FinishModListFragment extends BaseFragment {
         } catch (Exception e) {
             Toast.makeText(getContext(), "选择的文件不为压缩包。", Toast.LENGTH_SHORT).show();
             mProgressDialog.hide();
+        }
+    }
+
+    /**
+     * init ViewText
+     */
+    private void initTextView(){
+        if (mModList.size() > 0){
+            mTextView.setVisibility(View.GONE);
+        }else {
+            mTextView.setVisibility(View.VISIBLE);
         }
     }
 
