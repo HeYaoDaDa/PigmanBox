@@ -18,6 +18,6 @@
         \n添加mod将无效</string>
     <string name="FinishNullItem">没有找到已加载的mod
         \n你可以通过右下角的添加按钮打开文件管理器
-        \n选择mod压缩包来加载
+        \n选择mod压缩包或者modinfo.lua文件来加载
     </string>
 </resources>

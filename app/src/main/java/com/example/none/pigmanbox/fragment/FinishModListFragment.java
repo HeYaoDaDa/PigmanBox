@@ -178,23 +178,15 @@ public class FinishModListFragment extends BaseFragment {
     private void loadMod(File file,Mod mod){
         ModUtils.mods[mod.getId()] = mod;
         String path = PathUtils.modPath + ModUtils.getModDirName(mod);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                FileUtils.moveDir(file, new File(PathUtils.modPath + ModUtils.getModDirName(mod)), () -> {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mModList.clear();
-                            mModList.addAll(ModUtils.getFinishMods());
-                            mFinishModListAdapter.notifyDataSetChanged();
-                            mProgressDialog.hide();
-                        }
-                    });
-                    return true;
-                });
-            }
-        }).start();
+        new Thread(() -> FileUtils.moveDir(file, new File(PathUtils.modPath + ModUtils.getModDirName(mod)), () -> {
+            runOnUiThread(() -> {
+                mModList.clear();
+                mModList.addAll(ModUtils.getFinishMods());
+                mFinishModListAdapter.notifyDataSetChanged();
+                mProgressDialog.hide();
+            });
+            return true;
+        })).start();
     }
     /**
      * progressDialog

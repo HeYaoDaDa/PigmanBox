@@ -68,6 +68,7 @@ public class GameListFragment extends BaseFragment {
     @Override
     public void initEvent() {
         mMyViewPagerAdapter = new MyViewPagerAdapter(getChildFragmentManager(), title, fragments);
+        mViewPager.setOffscreenPageLimit(2);
         mViewPager.setAdapter(mMyViewPagerAdapter);
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(mTabLayout));
 

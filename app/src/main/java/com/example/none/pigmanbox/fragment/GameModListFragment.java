@@ -25,6 +25,7 @@ import com.example.none.pigmanbox.util.ModUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static com.blankj.utilcode.util.Utils.runOnUiThread;
 
@@ -85,7 +86,7 @@ public class GameModListFragment extends BaseFragment {
 
     @Override
     public void initEvent() {
-
+        mFloatingActionButton.setOnClickListener(v -> showMultiSelect());
     }
 
     /**
@@ -97,7 +98,7 @@ public class GameModListFragment extends BaseFragment {
         if (planAddModlist.size() > 0 || planDeleterModlist.size() > 0) {
             mFloatingActionButton2.setVisibility(View.VISIBLE);
             mFloatingActionButton2.setOnClickListener(v -> {
-                showMultiSelect();
+                showLoading();
 //                    ModUtil.updataGameMod(game,handler);
             });
         }else {
@@ -149,31 +150,24 @@ public class GameModListFragment extends BaseFragment {
             isSelect[i] = false;
         }
 
-        builder = new AlertDialog.Builder(getContext(),R.style.Theme_AppCompat_DayNight_Dialog)
+        builder = new AlertDialog.Builder(Objects.requireNonNull(getActivity()),R.style.Theme_AppCompat_DayNight_Dialog)
+                .setMessage(items.length>0?null:"没有找到未安装的mod")
                 .setTitle(mGame.getGameName())
                 .setIcon(GameUtils.getGameIcon(mGame.getPackName()))
-                .setMultiChoiceItems(items, isSelect, new DialogInterface.OnMultiChoiceClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i, boolean b) {
-
-                        if (b) {
-                            choice.add(i);
-                        } else {
-                            choice.remove(i);
-                        }
-
+                .setMultiChoiceItems(items, isSelect, (dialogInterface, i, b) -> {
+                    if (b) {
+                        choice.add(i);
+                    } else {
+                        choice.remove(i);
                     }
-                }).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        for (int j = 0; j < choice.size(); j++) {
-                            //将选择的mod列表添加到计划添加mod列表中
-                            planAddModlist.add(canAddModList.get(choice.get(j)));
-                            mGameModListAdapter.notifyDataSetChanged();
-                        }
-                        //对计划添加的mod列表进行了操作所以这里进行了第二个浮动按钮的更新
-                        initSaveButton();
+                }).setPositiveButton("确定", (dialogInterface, i) -> {
+                    for (int j = 0; j < choice.size(); j++) {
+                        //将选择的mod列表添加到计划添加mod列表中
+                        planAddModlist.add(canAddModList.get(choice.get(j)));
+                        mGameModListAdapter.notifyDataSetChanged();
                     }
+                    //对计划添加的mod列表进行了操作所以这里进行了第二个浮动按钮的更新
+                    initSaveButton();
                 });
 
         builder.create().show();
@@ -190,11 +184,29 @@ public class GameModListFragment extends BaseFragment {
         planFindModList.addAll(mGame.getPlanAddModlist());
         List<Mod> canAddModList = new ArrayList<>(ModUtils.getFinishMods());
         for (Mod mod : planFindModList) {
-            Mod buffMod = canAddModList.get(canAddModList.indexOf(mod));
-            if (buffMod != null) {
-                canAddModList.remove(buffMod);
+            if (canAddModList.indexOf(mod)>-1){
+                Mod buffMod = canAddModList.get(canAddModList.indexOf(mod));
+                if (buffMod != null) {
+                    canAddModList.remove(buffMod);
+                }
             }
         }
         return canAddModList;
+    }
+
+    /**
+     * proogressDialog
+     */
+    private void showLoading() {
+
+        final int MAX_VALUE = 100;
+        mProgressDialog = new ProgressDialog(getContext(),R.style.Theme_AppCompat_DayNight_Dialog);
+        mProgressDialog.setProgress(0);
+        mProgressDialog.setTitle("莫着急，正在干活。");
+        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        mProgressDialog.setMax(MAX_VALUE);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setIndeterminate(false);
+        mProgressDialog.show();
     }
 }
