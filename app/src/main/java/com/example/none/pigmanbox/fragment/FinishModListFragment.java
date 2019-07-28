@@ -44,7 +44,7 @@ public class FinishModListFragment extends BaseFragment {
     public void onLazyLoad() {
         new Thread(() -> {
             try {
-                ModUtils.initFileModList();
+                ModUtils.initFileModListTest();
             } catch (Exception e) {
                 Toast.makeText(getContext(), "数组满了", Toast.LENGTH_LONG).show();
             }
@@ -112,6 +112,7 @@ public class FinishModListFragment extends BaseFragment {
                 showModConflict(mod,ModUtils.mods[mod.getId()],zipFile);
                 return;
             }
+            initTextView();
             loadMod(zipFile,mod);
         } catch (Exception e) {
             Toast.makeText(getContext(), "选择的文件不为压缩包。", Toast.LENGTH_SHORT).show();

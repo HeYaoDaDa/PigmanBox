@@ -11,6 +11,7 @@ import net.lingala.zip4j.model.FileHeader;
 import net.lingala.zip4j.util.Zip4jUtil;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,7 +75,7 @@ public interface ModUtils {
      * @throws Exception array full
      */
     public static int createId() throws Exception {
-        for (int i = mods.length - 1; i >= 0; i--) {
+        for (int i = mods.length-1; i >= 0; i--) {
             if (mods[i] == null) {
                 return i;
             }
@@ -206,6 +207,21 @@ public interface ModUtils {
         }
     }
 
+    /**
+     * init Finish mod
+     */
+    public static void initFileModListTest() throws Exception {
+        File modsFile = new File(PathUtils.modPath);
+        List<File> fileList = FileUtils.listFilesInDirWithFilter(modsFile, pathname -> pathname.getName().equals(SettingUtils.MOD_MODINFO_NAME), true);
+        for (File file:fileList){
+            File modDir = file.getParentFile();
+            String modName = modDir.getName();
+            Mod mod = createMod(readModInfoList(modDir),modName,true);
+            if (!modDir.getName().startsWith("ds"))
+                modDir.renameTo(new File(modDir.getParent()+File.separator+getModDirName(mod)));
+            mods[mod.getId()] = mod;
+        }
+    }
     /**
      * create mod object
      * @param stringList modinfoContext

@@ -17,10 +17,7 @@
         \n如果未安装饥荒mod框架
         \n添加mod将无效</string>
     <string name="FinishNullItem">没有找到已加载的mod
-        \n你可以通过右下角的添加按钮添加mod到等待安装队列
-        \n再点击保存按钮执行计划
-        \n请确认游戏安装包破解了数据包验证
-        \n否则改动数据包会导致游戏程序不识别
-        \n如果未安装饥荒mod框架
-        \n添加mod将无效</string>
+        \n你可以通过右下角的添加按钮打开文件管理器
+        \n选择mod压缩包来加载
+    </string>
 </resources>
