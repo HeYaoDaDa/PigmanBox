@@ -9,21 +9,27 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.blankj.utilcode.util.FileUtils;
 import com.example.none.pigmanbox.R;
 import com.example.none.pigmanbox.adapter.FinishModListAdapter;
 import com.example.none.pigmanbox.base.BaseFragment;
 import com.example.none.pigmanbox.modle.Mod;
 import com.example.none.pigmanbox.util.ModUtils;
+import com.example.none.pigmanbox.util.PathUtils;
 import com.example.none.pigmanbox.util.SettingUtils;
 
 import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import static com.blankj.utilcode.util.Utils.runOnUiThread;
@@ -97,26 +103,44 @@ public class FinishModListFragment extends BaseFragment {
         String path;
         Uri uri = data.getData();
         path = uri.getPath();
-        try {
-            ZipFile zipFile = new ZipFile(path);
-            if (zipFile.isEncrypted()) {
-                zipFile.setPassword(SettingUtils.ZIP_PASSWOID);
+        if (path.endsWith(SettingUtils.MOD_MODINFO_NAME)){
+            File file = new File(path);
+            try {
+                Mod mod = ModUtils.createMod(ModUtils.readModInfoList(file),file.getParentFile().getName(),true);
+                if (ModUtils.mods[mod.getId()]!=null&&ModUtils.mods[mod.getId()].isExist()){
+                    mProgressDialog.hide();
+                    showModConflict(mod,ModUtils.mods[mod.getId()],()-> loadMod(file.getParentFile(),mod));
+                    return;
+                }
+                initTextView();
+                loadMod(file.getParentFile(),mod);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(getContext(), "文件打开失败。", Toast.LENGTH_SHORT).show();
             }
-            if (!ModUtils.isMod(zipFile)) {
-                Toast.makeText(getContext(), "选择的压缩包不为mod", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            Mod mod = ModUtils.createMod(ModUtils.readModInfoList(zipFile), zipFile.getFile().getName(), true);
-            if (ModUtils.mods[mod.getId()]!=null&&ModUtils.mods[mod.getId()].isExist()){
+            return;
+        }else {
+            try {
+                ZipFile zipFile = new ZipFile(path);
+                if (zipFile.isEncrypted()) {
+                    zipFile.setPassword(SettingUtils.ZIP_PASSWOID);
+                }
+                if (!ModUtils.isMod(zipFile)) {
+                    Toast.makeText(getContext(), "选择的压缩包不为mod", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Mod mod = ModUtils.createMod(ModUtils.readModInfoList(zipFile), zipFile.getFile().getName(), true);
+                if (ModUtils.mods[mod.getId()] != null && ModUtils.mods[mod.getId()].isExist()) {
+                    mProgressDialog.hide();
+                    showModConflict(mod, ModUtils.mods[mod.getId()], () -> loadMod(zipFile, mod));
+                    return;
+                }
+                initTextView();
+                loadMod(zipFile, mod);
+            } catch (Exception e) {
+                Toast.makeText(getContext(), "选择的文件不为压缩包。", Toast.LENGTH_SHORT).show();
                 mProgressDialog.hide();
-                showModConflict(mod,ModUtils.mods[mod.getId()],zipFile);
-                return;
             }
-            initTextView();
-            loadMod(zipFile,mod);
-        } catch (Exception e) {
-            Toast.makeText(getContext(), "选择的文件不为压缩包。", Toast.LENGTH_SHORT).show();
-            mProgressDialog.hide();
         }
     }
 
@@ -132,20 +156,45 @@ public class FinishModListFragment extends BaseFragment {
     }
 
     /**
-     * load Mod to app/mods
+     * load Mod to app/mod
      * @param zipFile mod file
      * @param mod mod
      */
     private void loadMod(ZipFile zipFile,Mod mod){
         ModUtils.mods[mod.getId()] = mod;
-        ModUtils.unzipModZip2(zipFile, mod, () -> {
-            runOnUiThread(() -> {
-                mModList.clear();
-                mModList.addAll(ModUtils.getFinishMods());
-                mFinishModListAdapter.notifyDataSetChanged();
-                mProgressDialog.hide();
-            });
-        });
+        ModUtils.unzipModZip(zipFile, mod, () -> runOnUiThread(() -> {
+            mModList.clear();
+            mModList.addAll(ModUtils.getFinishMods());
+            mFinishModListAdapter.notifyDataSetChanged();
+            mProgressDialog.hide();
+        }));
+    }
+
+    /**
+     * load mod to app/mod
+     * @param file modinfo.lua
+     * @param mod mod object
+     */
+    private void loadMod(File file,Mod mod){
+        ModUtils.mods[mod.getId()] = mod;
+        String path = PathUtils.modPath + ModUtils.getModDirName(mod);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                FileUtils.moveDir(file, new File(PathUtils.modPath + ModUtils.getModDirName(mod)), () -> {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mModList.clear();
+                            mModList.addAll(ModUtils.getFinishMods());
+                            mFinishModListAdapter.notifyDataSetChanged();
+                            mProgressDialog.hide();
+                        }
+                    });
+                    return true;
+                });
+            }
+        }).start();
     }
     /**
      * progressDialog
@@ -160,11 +209,10 @@ public class FinishModListFragment extends BaseFragment {
         mProgressDialog.show();
 
     }
-
     /**
      * mod conflict Dialog
      */
-    private void showModConflict(Mod oldMod,Mod newMod,ZipFile zipFile) {
+    private void showModConflict(Mod oldMod,Mod newMod,Runnable runnable) {
 
          mBuilder = new AlertDialog.Builder(getActivity(),R.style.Theme_AppCompat_DayNight_Dialog)
                  .setIcon(R.mipmap.ic_launcher)
@@ -179,7 +227,7 @@ public class FinishModListFragment extends BaseFragment {
                 )
                  .setPositiveButton("确定", (dialogInterface, i) -> {
                      showProgressDialog();
-                     loadMod(zipFile,newMod);
+                     runnable.run();
                 })
                  .setNegativeButton("取消", (dialogInterface, i) -> dialogInterface.dismiss());
         mBuilder.create().show();

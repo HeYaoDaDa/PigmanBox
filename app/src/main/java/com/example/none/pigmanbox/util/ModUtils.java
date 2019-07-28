@@ -267,8 +267,13 @@ public interface ModUtils {
      */
     public static List<String> readModInfoList(File file) throws ZipException, IOException {
         List<String> stringList = new ArrayList<>();
-        if (!file.isDirectory())
+        if (!file.isDirectory()){
+            if (file.getName().endsWith(SettingUtils.MOD_MODINFO_NAME)) {
+                stringList.addAll(MyFileUtils.readFileList(file));
+                return stringList;
+            }
             throw new ZipException("no Directory");
+        }
         File[] files = file.listFiles();
         if (files == null) {
             return stringList;
@@ -319,37 +324,34 @@ public interface ModUtils {
      * @param mod mod
      * @param runnable Callback
      */
-    public static void unzipModZip2(final ZipFile zipFile, final Mod mod, final Runnable runnable) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (!isMod(zipFile))
-                        throw new Exception("压缩包不为mod");
-                    File filePath = new File(PathUtils.tempPath);//先统一放到临时文件夹中
-                    if (!zipFile.isValidZipFile()) { //
-                        throw new ZipException("no zip!");
-                    }
-
-                    if (filePath.isDirectory() && !filePath.exists()) {
-                        filePath.mkdir();
-                    }
-                    if (zipFile.isEncrypted()) {
-                        zipFile.setPassword(SettingUtils.ZIP_PASSWOID); // 设置解压密码
-                    }
-                    zipFile.setRunInThread(false); //true 在子线程中进行解压 , false主线程中解压
-                    zipFile.extractAll(filePath.getPath()); //将压缩文件解压到filePath中...
-
-
-                    File temp = new File(PathUtils.tempPath);//临时文件目录
-                    List<File> fileList = FileUtils.listFilesInDir(temp, true);
-
-
-                    mobileMod(mod, fileList, runnable);
-//                    zipFile.getFile().delete();//删除zip文件
-                } catch (Exception e) {
-                    e.printStackTrace();
+    public static void unzipModZip(final ZipFile zipFile, final Mod mod, final Runnable runnable) {
+        new Thread(() -> {
+            try {
+                if (!isMod(zipFile))
+                    throw new Exception("压缩包不为mod");
+                File filePath = new File(PathUtils.tempPath);//先统一放到临时文件夹中
+                if (!zipFile.isValidZipFile()) { //
+                    throw new ZipException("no zip!");
                 }
+
+                if (filePath.isDirectory() && !filePath.exists()) {
+                    filePath.mkdir();
+                }
+                if (zipFile.isEncrypted()) {
+                    zipFile.setPassword(SettingUtils.ZIP_PASSWOID); // 设置解压密码
+                }
+                zipFile.setRunInThread(false); //true 在子线程中进行解压 , false主线程中解压
+                zipFile.extractAll(filePath.getPath()); //将压缩文件解压到filePath中...
+
+
+                File temp = new File(PathUtils.tempPath);//临时文件目录
+                List<File> fileList = FileUtils.listFilesInDir(temp, true);
+
+
+                mobileMod(mod, fileList, runnable);
+//                    zipFile.getFile().delete();//删除zip文件
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }).start();
     }
@@ -374,12 +376,9 @@ public interface ModUtils {
                 PathUtils.clearTemp();
                 return;
             }
-            FileUtils.moveDir(modFile, modPath, new FileUtils.OnReplaceListener() {
-                @Override
-                public boolean onReplace() {//开始移动目录
-                    runnable.run();
-                    return true;
-                }
+            FileUtils.moveDir(modFile, modPath, () -> {//开始移动目录
+                runnable.run();
+                return true;
             });
             PathUtils.clearTemp();
         }).start();
