@@ -25,16 +25,18 @@ import com.example.none.pigmanbox.util.ModUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.blankj.utilcode.util.Utils.runOnUiThread;
+
 public class GameModListFragment extends BaseFragment {
-    private RecyclerView recyclerView;
-    private SwipeRefreshLayout swipeRefreshLayout;
+    private RecyclerView mRecyclerView;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
-    private FloatingActionButton floatingActionButton;
-    private FloatingActionButton floatingActionButton2;
-    private ProgressDialog progressDialog2;
+    private FloatingActionButton mFloatingActionButton;
+    private FloatingActionButton mFloatingActionButton2;
+    private ProgressDialog mProgressDialog;
 
-    private GameModListAdapter adapter;
-    private Game game;
+    private GameModListAdapter mGameModListAdapter;
+    private Game mGame;
     private List<Mod> planAddModlist;
     private List<Mod> planDeleterModlist;
 
@@ -43,6 +45,19 @@ public class GameModListFragment extends BaseFragment {
 
     @Override
     public void onLazyLoad() {
+        mSwipeRefreshLayout.setRefreshing(true);
+        new Thread(()->{
+            initData();
+            try {
+                GameUtils.initModlist(mGame);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            runOnUiThread(() -> {
+                initSaveButton();
+                mSwipeRefreshLayout.setRefreshing(false);
+            });
+        }).start();
 
     }
 
@@ -50,22 +65,17 @@ public class GameModListFragment extends BaseFragment {
     public View initView(LayoutInflater inflater, @Nullable ViewGroup container) {
         View view = inflater.inflate(R.layout.fragment_gamemodlist, container, false);
 
-        recyclerView = view.findViewById(R.id.fgml_RecyclerView);
-        swipeRefreshLayout = view.findViewById(R.id.fgml_SwipeRefreshLayout);
-        floatingActionButton = view.findViewById(R.id.fgml_FloatingActionButton);
-        floatingActionButton2 = view.findViewById(R.id.fgml_FloatingActionButton2);
+        mRecyclerView = view.findViewById(R.id.fgml_RecyclerView);
+        mSwipeRefreshLayout = view.findViewById(R.id.fgml_SwipeRefreshLayout);
+        mFloatingActionButton = view.findViewById(R.id.fgml_FloatingActionButton);
+        mFloatingActionButton2 = view.findViewById(R.id.fgml_FloatingActionButton2);
 
         initData();
         LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
-        recyclerView.setLayoutManager(layoutManager);
-        adapter = new GameModListAdapter(game.getModList(), planAddModlist, planDeleterModlist, this::initSaveButton);
-        recyclerView.setAdapter(adapter);
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                onLazyLoad();
-            }
-        });
+        mRecyclerView.setLayoutManager(layoutManager);
+        mGameModListAdapter = new GameModListAdapter(mGame.getModList(), planAddModlist, planDeleterModlist, this::initSaveButton);
+        mRecyclerView.setAdapter(mGameModListAdapter);
+        mSwipeRefreshLayout.setOnRefreshListener(this::onLazyLoad);
         return view;
     }
 
@@ -81,13 +91,13 @@ public class GameModListFragment extends BaseFragment {
     private void initSaveButton(){
         initData();
         if (planAddModlist.size() > 0 || planDeleterModlist.size() > 0) {
-            floatingActionButton2.setVisibility(View.VISIBLE);
-            floatingActionButton2.setOnClickListener(v -> {
+            mFloatingActionButton2.setVisibility(View.VISIBLE);
+            mFloatingActionButton2.setOnClickListener(v -> {
                 showMultiSelect();
 //                    ModUtil.updataGameMod(game,handler);
             });
         }else {
-            floatingActionButton2.setVisibility(View.GONE);
+            mFloatingActionButton2.setVisibility(View.GONE);
         }
     }
 
@@ -101,12 +111,12 @@ public class GameModListFragment extends BaseFragment {
         String pack = bundle.getString("pack");
         for (Game game : GameUtils.gameList) {
             if (game.getPackName().equals(pack)) {
-                this.game = game;
+                this.mGame = game;
                 break;
             }
         }
-        planAddModlist = game.getPlanAddModlist();
-        planDeleterModlist = game.getPlanDeleterModlist();
+        planAddModlist = mGame.getPlanAddModlist();
+        planDeleterModlist = mGame.getPlanDeleterModlist();
     }
 
     /**
@@ -125,8 +135,8 @@ public class GameModListFragment extends BaseFragment {
         }
 
         builder = new AlertDialog.Builder(getContext(),R.style.Theme_AppCompat_DayNight_Dialog)
-                .setTitle(game.getGameName())
-                .setIcon(GameUtils.getGameIcon(game.getPackName()))
+                .setTitle(mGame.getGameName())
+                .setIcon(GameUtils.getGameIcon(mGame.getPackName()))
                 .setMultiChoiceItems(items, isSelect, new DialogInterface.OnMultiChoiceClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i, boolean b) {
@@ -144,7 +154,7 @@ public class GameModListFragment extends BaseFragment {
                         for (int j = 0; j < choice.size(); j++) {
                             //将选择的mod列表添加到计划添加mod列表中
                             planAddModlist.add(canAddModList.get(choice.get(j)));
-                            adapter.notifyDataSetChanged();
+                            mGameModListAdapter.notifyDataSetChanged();
                         }
                         //对计划添加的mod列表进行了操作所以这里进行了第二个浮动按钮的更新
                         initSaveButton();
@@ -161,8 +171,8 @@ public class GameModListFragment extends BaseFragment {
      * @return can install mod
      */
     private List<Mod> getCanAddModList() {
-        List<Mod> planFindModList = game.getModList();
-        planFindModList.addAll(game.getPlanAddModlist());
+        List<Mod> planFindModList = mGame.getModList();
+        planFindModList.addAll(mGame.getPlanAddModlist());
         List<Mod> canAddModList = new ArrayList<>(ModUtils.getFinishMods());
         for (Mod mod : planFindModList) {
             Mod buffMod = canAddModList.get(canAddModList.indexOf(mod));

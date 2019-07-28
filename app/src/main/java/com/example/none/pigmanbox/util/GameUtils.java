@@ -1,7 +1,6 @@
 package com.example.none.pigmanbox.util;
 
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 
 import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.FileUtils;
@@ -9,12 +8,9 @@ import com.example.none.pigmanbox.modle.Game;
 import com.example.none.pigmanbox.modle.Mod;
 
 import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.FileHeader;
 
 import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,20 +21,17 @@ public interface GameUtils {
     public static List<Game> gameList = new ArrayList<>();
 
     /**
-     * 初始化，找出所有安装的饥荒游戏版本
+     * init phone install game and init game modlist.
      */
     public static void initGame() throws Exception {
-        List<File> fileList = FileUtils.listFilesInDirWithFilter(new File(SettingUtils.PATH_ANDROID_OBB), new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                String fileName = pathname.getName();
-                if (pathname.isFile() && fileName.endsWith(""))
-                    if (pathname.isFile() && fileName.endsWith(".obb") && fileName.contains(SettingUtils.GAME_PAGE_NAME)) {
-                        gameList.clear();
-                        return true;
-                    }
-                return false;
-            }
+        List<File> fileList = FileUtils.listFilesInDirWithFilter(new File(SettingUtils.PATH_ANDROID_OBB), pathname -> {
+            String fileName = pathname.getName();
+            if (pathname.isFile() && fileName.endsWith(""))
+                if (pathname.isFile() && fileName.endsWith(".obb") && fileName.contains(SettingUtils.GAME_PAGE_NAME)) {
+                    gameList.clear();
+                    return true;
+                }
+            return false;
         }, true);
         for (File file : fileList) {
             String packNeme = getPackName(file);
@@ -52,10 +45,9 @@ public interface GameUtils {
     }
 
     /**
-     * 初始化游戏中mod列表
+     * init game install mod list
      *
-     * @param game 游戏
-     * @return
+     * @param game game object
      */
     public static void initModlist(Game game) throws Exception {
         game.getModList().clear();//清空原来的数据
@@ -72,14 +64,12 @@ public interface GameUtils {
                         Mod mod = ModUtils.mods[id];
                         game.getModList().add(mod);
                     }else {
-                        Mod mod = null;
-                        mod = ModUtils.createMod(Zip4jUtils.readZipFileContent(zipFile,fileHeader),modIDName,false);
+                        Mod mod = ModUtils.createMod(Zip4jUtils.readZipFileContent(zipFile,fileHeader),modIDName,false);
                         ModUtils.mods[mod.getId()] = mod;
                         game.getModList().add(mod);
                     }
                 }else {
-                    Mod mod = null;
-                    mod = ModUtils.createMod(Zip4jUtils.readZipFileContent(zipFile,fileHeader),modFileName,false);
+                    Mod mod = ModUtils.createMod(Zip4jUtils.readZipFileContent(zipFile,fileHeader),modFileName,false);
                     ModUtils.mods[mod.getId()] = mod;
                     game.getModList().add(mod);
                 }
@@ -87,29 +77,29 @@ public interface GameUtils {
         }
     }
     /**
-     * 返回游戏名称
+     * get game apk name
      *
-     * @param packName 游戏包名
-     * @return
+     * @param packName game packname
+     * @return game apk name
      */
     public static String getGameName(String packName) {
         return AppUtils.getAppName(packName);
     }
 
     /**
-     * 返回游戏包名
+     * get game apk packname
      *
-     * @param obbFile obb文件
-     * @return
+     * @param obbFile obbfile
+     * @return game packname
      */
     public static String getPackName(File obbFile) {
         return obbFile.getParentFile().getName();
     }
 
     /**
-     * 返回游戏的图标
+     * get game apk icon
      *
-     * @return
+     * @return game apk icon
      */
     public static Drawable getGameIcon(String packName) {
         return AppUtils.getAppIcon(packName);
