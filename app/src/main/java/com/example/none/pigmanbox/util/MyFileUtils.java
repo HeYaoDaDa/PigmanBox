@@ -69,4 +69,32 @@ public interface MyFileUtils {
         File file = new File(fileSting);
         return backupFile(file);
     }
+
+    /**
+     * get File telative Path
+     *
+     * @param file        file
+     * @param fileDirPath root
+     * @return
+     */
+    public static String getFileRelativePath(File file, File fileDirPath) throws Exception {
+        StringBuilder fileRelativePath = new StringBuilder(file.getName());
+        if (file.equals(fileDirPath))//如果文件和根目录相同则直接返回文件名
+            return file.getName()+File.separator;
+        if (!fileDirPath.isDirectory())
+            throw new Exception("相对的文件夹不为文件夹");
+        while (true) {
+            File parentFile = file.getParentFile();
+            if (parentFile == null) {
+                throw new Exception("该文件没有父目录");
+            }
+            fileRelativePath.insert(0, parentFile.getName() + File.separator);
+            if (parentFile.equals(fileDirPath)) {
+                break;
+            } else {
+                file = parentFile;
+            }
+        }
+        return fileRelativePath.toString();
+    }
 }

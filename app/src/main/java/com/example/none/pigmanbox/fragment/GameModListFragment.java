@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.ParcelUuid;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -14,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.none.pigmanbox.R;
 import com.example.none.pigmanbox.adapter.GameModListAdapter;
@@ -22,10 +24,15 @@ import com.example.none.pigmanbox.modle.Game;
 import com.example.none.pigmanbox.modle.Mod;
 import com.example.none.pigmanbox.util.GameUtils;
 import com.example.none.pigmanbox.util.ModUtils;
+import com.example.none.pigmanbox.util.MyZipUtils.ModifyZip;
+import com.example.none.pigmanbox.util.PathUtils;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.zip.ZipFile;
 
 import static com.blankj.utilcode.util.Utils.runOnUiThread;
 
@@ -87,6 +94,14 @@ public class GameModListFragment extends BaseFragment {
     @Override
     public void initEvent() {
         mFloatingActionButton.setOnClickListener(v -> showMultiSelect());
+        mFloatingActionButton2.setOnClickListener(v -> {
+            try {
+                modifyZipFile();
+            } catch (IOException e) {
+                Toast.makeText(getActivity(),"更改数据包出错",Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+            }
+        });
     }
 
     /**
@@ -97,10 +112,6 @@ public class GameModListFragment extends BaseFragment {
         initData();
         if (planAddModlist.size() > 0 || planDeleterModlist.size() > 0) {
             mFloatingActionButton2.setVisibility(View.VISIBLE);
-            mFloatingActionButton2.setOnClickListener(v -> {
-                showLoading();
-//                    ModUtil.updataGameMod(game,handler);
-            });
         }else {
             mFloatingActionButton2.setVisibility(View.GONE);
         }
@@ -194,6 +205,22 @@ public class GameModListFragment extends BaseFragment {
         return canAddModList;
     }
 
+    /**
+     * start modifyZipFile
+     * @throws IOException io
+     */
+    private void modifyZipFile() throws IOException {
+        String path = "mods/";
+        List<String> stringList = new ArrayList<>();
+        List<File> fileList= new ArrayList<>();
+        for (Mod mod:mGame.getPlanDeleterModlist()){
+            stringList.add(path+mod.getName());
+        }
+        for (Mod mod:mGame.getPlanAddModlist()){
+            fileList.add(new File(PathUtils.modPath+mod.getName()));
+        }
+        new ModifyZip(mGame.getObbFile(),stringList,fileList,path).run();
+    }
     /**
      * proogressDialog
      */
