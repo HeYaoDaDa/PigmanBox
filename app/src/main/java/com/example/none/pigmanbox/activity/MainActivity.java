@@ -1,10 +1,14 @@
 package com.example.none.pigmanbox.activity;
 
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -19,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar mToolbar;
     private ViewPager mViewPager;
     private BottomNavigationView mBottomNavigationView;
+    private AlertDialog.Builder mBuilder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,8 +45,10 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_money:
+                showTwo();
                 break;
             case R.id.action_help:
+                showHelp();
                 break;
         }
         return true;
@@ -108,5 +115,33 @@ public class MainActivity extends AppCompatActivity {
         });
         mBottomNavigationView.setSelectedItemId(mViewPager.getId());
 
+    }
+    private void showTwo() {
+        mBuilder = new AlertDialog.Builder(this, R.style.Theme_AppCompat_DayNight_Dialog).setIcon(R.mipmap.ic_launcher).setTitle("捐赠")
+                .setMessage("二维码").setPositiveButton("支付宝", (dialogInterface, i) -> {
+                    Uri uri = Uri.parse("https://s2.ax1x.com/2019/08/06/ehz7a4.jpg");
+                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                    startActivity(intent);
+                }).setNegativeButton("微信", (dialogInterface, i) -> {
+                    Uri uri = Uri.parse("https://s2.ax1x.com/2019/08/06/ehxm1P.png");
+                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                    startActivity(intent);
+                });
+        mBuilder.create().show();
+    }
+
+    private void showHelp() {
+        mBuilder = new AlertDialog.Builder(this, R.style.Theme_AppCompat_DayNight_Dialog).setIcon(R.mipmap.ic_launcher).setTitle("帮助")
+                .setMessage("***使用前请确认游戏已破解数据包验证不然会导致游戏无法打开。\n" +
+                        "***游戏需要安装dsmm补丁否则无效\n" +
+                        "***如出现问题可手动恢复数据包备份\n" +
+                        "1,下载mod或者导入本地mod（导入页面）\n" +
+                        "2,在游戏列表中管理mod\n" +
+                        "3,单击保存按钮并等待。").setPositiveButton("返回", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                    }
+                });
+        mBuilder.create().show();
     }
 }
