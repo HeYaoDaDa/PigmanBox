@@ -1,4 +1,4 @@
-package com.example.none.pigmanbox.util.MyZipUtils;
+package com.example.none.pigmanbox.util.MyZipUtil;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

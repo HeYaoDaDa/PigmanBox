@@ -1,5 +1,8 @@
-package com.example.none.pigmanbox.util.MyZipUtils;
+package com.example.none.pigmanbox.util.MyZipUtil;
 
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -23,26 +26,36 @@ import java.util.zip.ZipOutputStream;
  * delete or add zip entry
  */
 public class ModifyZip implements Runnable {
+    public final static int STARTE = 10000;
+    public final static int FULFILL = 10001;
+    public final static int ERORR = 10002;
+    public final static int PROGRESS = 10003;
+    public final static String PROGRESS_STRING = "PROGRESS_STRING";
     // 4MB buffer
     private static final byte[] BUFFER = new byte[4096 * 1024];
     private final File mZipFile;
     private final List<String> mPlanDeleteStringList;
     private final List<File> mPlanAddFileList;
     private final String mPath;
+    private final Handler mHandler;
 
-    public ModifyZip(File mZipFile, List<String> mPlanDeleteStringLIst, List<File> mPlanAddFileList, String mPath) {
+    public ModifyZip(File mZipFile, List<String> mPlanDeleteStringLIst, List<File> mPlanAddFileList, String mPath,Handler handler) {
         this.mZipFile = mZipFile;
         this.mPlanDeleteStringList = mPlanDeleteStringLIst;
         this.mPlanAddFileList = mPlanAddFileList;
         this.mPath = mPath;
+        this.mHandler = handler;
     }
 
     @Override
     public void run() {
         try {
-            modifyZip(mZipFile,mPlanDeleteStringList,mPlanAddFileList,mPath);
+            mHandler.sendEmptyMessage(STARTE);
+            modifyZip(mZipFile,mPlanDeleteStringList,mPlanAddFileList,mPath,mHandler);
+            mHandler.sendEmptyMessage(FULFILL);
         } catch (Exception e) {
             e.printStackTrace();
+            mHandler.sendEmptyMessage(ERORR);
             Toast.makeText(MyApplication.getContext(),"修改数据包失败。",Toast.LENGTH_SHORT).show();
         }
     }
@@ -66,21 +79,23 @@ public class ModifyZip implements Runnable {
      * @param path add path
      * @throws Exception erorr
      */
-    private void modifyZip(File zipFile,List<String> planDeleteStringList,List<File> planAddFileList,String path) throws Exception {
+    private void modifyZip(File zipFile, List<String> planDeleteStringList, List<File> planAddFileList, String path, Handler handler) throws Exception {
+        Bundle bundle = new Bundle();
+        Message msg = new Message();
         File backFile = new File(zipFile.getPath()+".bak");
         zipFile.renameTo(backFile);
         ZipFile backFileZip = new ZipFile(backFile);
-        Log.d("hydd", "backFile: "+backFile.getPath()+"\n||zipFile:"+zipFile.getPath());
         ZipOutputStream append = new ZipOutputStream(new FileOutputStream(zipFile));
 
-        List<ZipEntry> deleteZipEntry = new ArrayList<>();
+        List<String> deleteZipEntry = new ArrayList<>();
         getDeleteZipEntry(deleteZipEntry, backFileZip, planDeleteStringList);
+        Log.d("hydd||", "modifyZip: "+deleteZipEntry);
         // first, copy contents from existing war
         Enumeration<? extends ZipEntry> entries = backFileZip.entries();
         while (entries.hasMoreElements()) {
             ZipEntry e = entries.nextElement();
             //if e is plan delete entry
-            if (deleteZipEntry.contains(e)) {
+            if (deleteZipEntry.contains(e.getName())) {
                 continue;
             }
 
@@ -88,10 +103,15 @@ public class ModifyZip implements Runnable {
             if (!e.isDirectory()) {
                 copy(backFileZip.getInputStream(e), append);
             }
+            Message message = new Message();
+            bundle.putString(PROGRESS_STRING,"写入："+e.getName());
+            message.what = PROGRESS;
+            message.setData(bundle);
+            handler.sendMessage(message);
             append.closeEntry();
         }
         // now append some extra content
-        addZipFile(append,planAddFileList,path);
+        addZipFile(append,planAddFileList,path,handler);
         // close
         append.close();
     }
@@ -102,8 +122,9 @@ public class ModifyZip implements Runnable {
      * @param zipFile old zip
      * @param stringList delete zip file
      */
-    private void getDeleteZipEntry(List<ZipEntry> zipEntryList, ZipFile zipFile, List<String> stringList) {
+    private void getDeleteZipEntry(List<String> zipEntryList, ZipFile zipFile, List<String> stringList) {
         for (String s : stringList) {
+            Log.d("hydd", "String s: "+s);
             getDeleteZipEntry(zipEntryList, zipFile, new ZipEntry(s));
         }
     }
@@ -114,16 +135,18 @@ public class ModifyZip implements Runnable {
      * @param zipFile old zip
      * @param zipEntry delete zip entry
      */
-    private void getDeleteZipEntry(List<ZipEntry> zipEntryList, ZipFile zipFile, ZipEntry zipEntry) {
+    private void getDeleteZipEntry(List<String> zipEntryList, ZipFile zipFile, ZipEntry zipEntry) {
         if (!zipEntry.isDirectory()) {
-            zipEntryList.add(zipEntry);
+            Log.d("hydd", zipEntry.getName()+" is File");
+            zipEntryList.add(zipEntry.getName());
             return;
         }
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
         while (entries.hasMoreElements()) {
             ZipEntry nowZipEntry = entries.nextElement();
+            Log.d("hydd", nowZipEntry.getName());
             if (nowZipEntry.getName().startsWith(zipEntry.getName())) {
-                zipEntryList.add(nowZipEntry);
+                zipEntryList.add(nowZipEntry.getName());
             }
         }
     }
@@ -135,9 +158,9 @@ public class ModifyZip implements Runnable {
      * @param path zip path
      * @throws IOException io
      */
-    private void addZipFile(ZipOutputStream zipOutputStream,List<File> fileList,String path) throws IOException {
+    private void addZipFile(ZipOutputStream zipOutputStream,List<File> fileList,String path,Handler handler) throws IOException {
         for (File file:fileList){
-            addZipFile(zipOutputStream,file,path);
+            addZipFile(zipOutputStream,file,path,handler);
         }
     }
     /**
@@ -147,21 +170,27 @@ public class ModifyZip implements Runnable {
      * @param path zip path
      * @throws IOException io
      */
-    private void addZipFile(ZipOutputStream zipOutputStream,File file,String path) throws IOException {
+    private void addZipFile(ZipOutputStream zipOutputStream,File file,String path,Handler handler) throws IOException {
+        Bundle bundle = new Bundle();
+        Message msg = new Message();
         if (file.isDirectory()){
             for (File file1:file.listFiles()){
-                addZipFile(zipOutputStream,file1,path+file.getName()+File.separator);
+                addZipFile(zipOutputStream,file1,path+file.getName()+File.separator,handler);
             }
         }else {
             BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(file));
-
-            zipOutputStream.putNextEntry(new ZipEntry(path+file.getName()));
+            ZipEntry zipEntry = new ZipEntry(path+file.getName());
+            zipOutputStream.putNextEntry(zipEntry);
 
             int len;
             byte[] buffer = new byte[1024];
             while ((len = inputStream.read(buffer)) > 0) {
                 zipOutputStream.write(buffer, 0, len);
             }
+
+            bundle.putString(PROGRESS_STRING,"写入："+zipEntry.getName());
+            msg.setData(bundle);
+            handler.sendMessage(msg);
 
             zipOutputStream.closeEntry();
         }
