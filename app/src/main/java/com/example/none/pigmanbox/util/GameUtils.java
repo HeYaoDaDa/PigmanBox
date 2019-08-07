@@ -33,6 +33,9 @@ public interface GameUtils {
                 }
             return false;
         }, true);
+        if (fileList==null){
+            return;
+        }
         for (File file : fileList) {
             String packNeme = getPackName(file);
             if (packNeme.equals("com.kleientertainment.doNotStarveShipWrecked"))

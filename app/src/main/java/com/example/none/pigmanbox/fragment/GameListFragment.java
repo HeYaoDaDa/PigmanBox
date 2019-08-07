@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.example.none.pigmanbox.R;
 import com.example.none.pigmanbox.adapter.MyViewPagerAdapter;
@@ -16,14 +17,13 @@ import com.example.none.pigmanbox.base.BaseFragment;
 import com.example.none.pigmanbox.modle.Game;
 import com.example.none.pigmanbox.util.GameUtils;
 
-import net.lingala.zip4j.exception.ZipException;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.blankj.utilcode.util.Utils.runOnUiThread;
 
 public class GameListFragment extends BaseFragment {
+    private boolean erorr = false;
 
     private TabLayout mTabLayout;
     private ProgressBar mProgressBar;
@@ -32,6 +32,7 @@ public class GameListFragment extends BaseFragment {
     private MyViewPagerAdapter mMyViewPagerAdapter;
     private List<String> title = new ArrayList<>();
     private List<Fragment> fragments = new ArrayList<>();
+
     @Override
     public void onLazyLoad() {
         new Thread(() -> {
@@ -49,6 +50,7 @@ public class GameListFragment extends BaseFragment {
                     fragments.add(fragment);
                 }
             } catch (Exception e) {
+                erorr = true;
                 e.printStackTrace();
             } finally {
                 hideDialog();
@@ -80,11 +82,15 @@ public class GameListFragment extends BaseFragment {
      */
     public void hideDialog() {
         runOnUiThread(() -> {
+            if (title.size() < 1) {
+                Toast.makeText(getActivity(), erorr ? "解析某个数据包时出错，请检查数据包是否可用。" : "没有找到已安装的游戏。", Toast.LENGTH_LONG).show();
+            }
             mMyViewPagerAdapter.notifyDataSetChanged();
             mProgressBar.setVisibility(View.GONE);
             initIcon();
         });
     }
+
     /**
      * 给标签加速icon
      */
