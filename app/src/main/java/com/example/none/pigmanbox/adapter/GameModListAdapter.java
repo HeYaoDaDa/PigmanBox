@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -79,6 +80,7 @@ public class GameModListAdapter extends RecyclerView.Adapter<GameModListAdapter.
                 stats = 2;
             }
         }
+        Log.d("hydd", "GameAdapter:"+planAddModList);
         if (mod == null)
             return;
 //        String iconUrl = ModUtil.getModIconUrl(mod);
@@ -92,38 +94,29 @@ public class GameModListAdapter extends RecyclerView.Adapter<GameModListAdapter.
         viewHolder.mCardView.setCardBackgroundColor(Color.WHITE);
         switch (stats) {
             case 0:
-                viewHolder.button.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        planDeleteModList.add(mod);
-                        notifyItemChanged(i);//刷新一个条目的内容
-                        mRunnable.run();//回调按钮被点击
-                    }
+                viewHolder.button.setOnClickListener(v -> {
+                    planDeleteModList.add(mod);
+                    notifyItemChanged(i);//刷新一个条目的内容
+                    mRunnable.run();//回调按钮被点击
                 });
                 break;
             case 1:
                 viewHolder.mCardView.setCardBackgroundColor(Color.GREEN);
                 viewHolder.button.setText("取消");
-                viewHolder.button.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        planAddModList.remove(mod);
-                        notifyItemRemoved(i);//刷新删除一个条目
-                        mRunnable.run();//回调按钮被点击
-                    }
+                viewHolder.button.setOnClickListener(v -> {
+                    planAddModList.remove(mod);
+                    notifyItemRemoved(i);//刷新删除一个条目
+                    mRunnable.run();//回调按钮被点击
                 });
                 break;
             case 2:
 
                 viewHolder.mCardView.setCardBackgroundColor(Color.RED);
                 viewHolder.button.setText("取消");
-                viewHolder.button.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        planDeleteModList.remove(mod);
-                        notifyItemChanged(i);//刷新一个条目的内容
-                        mRunnable.run();//回调按钮被点击
-                    }
+                viewHolder.button.setOnClickListener(v -> {
+                    planDeleteModList.remove(mod);
+                    notifyItemChanged(i);//刷新一个条目的内容
+                    mRunnable.run();//回调按钮被点击
                 });
                 break;
         }

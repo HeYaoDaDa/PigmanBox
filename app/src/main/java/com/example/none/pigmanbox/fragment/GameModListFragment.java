@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.util.Consumer;
@@ -13,7 +12,6 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,13 +55,11 @@ public class GameModListFragment extends BaseFragment {
     private Game mGame;
     private List<Mod> planAddModlist;
     private List<Mod> planDeleterModlist;
-    @SuppressLint("HandlerLeak")
-    private Handler mHandler = null;
 
     public GameModListFragment() {
     }
 
-    @SuppressLint("HandlerLeak")
+
     @Override
     public void onLazyLoad() {
         mSwipeRefreshLayout.setRefreshing(true);
@@ -105,20 +101,36 @@ public class GameModListFragment extends BaseFragment {
     public void initEvent() {
         mFloatingActionButton.setOnClickListener(v -> showMultiSelect());
         mFloatingActionButton2.setOnClickListener(v -> {
-            new ModigyZipTask(getActivity(),mGame).execute();
+            new ModigyZipTask(getActivity(), mGame, new Runnable() {
+                @Override
+                public void run() {
+                    onLazyLoad();
+                    for (Mod mod : planDeleterModlist) {//删除mod的记录
+                        mGame.getModList().remove(mod);
+                    }
+                    for (Mod mod : planAddModlist) {//添加mod的记录
+                        mGame.getModList().add(mod);
+                    }
+                    planAddModlist.clear();
+                    planDeleterModlist.clear();
+                    mGameModListAdapter.notifyDataSetChanged();
+                }
+            }).execute();
         });
     }
 
     static class ModigyZipTask extends AsyncTask<Void,String,Boolean>{
         private final WeakReference<Activity> mActity;
         private final Game mGame;
+        private final Runnable mRunnable;
         private ProgressDialog mProgressDialog;
         private static int mSize;
         private static int mProgress;
 
-        ModigyZipTask(Activity activity,Game game) {
+        ModigyZipTask(Activity activity, Game game,Runnable mRunnable) {
             this.mActity = new WeakReference<>(activity);
             this.mGame = game;
+            this.mRunnable = mRunnable;
         }
 
         @Override
@@ -141,11 +153,13 @@ public class GameModListFragment extends BaseFragment {
             List<String> planDeleteStringList = new ArrayList<>();
             List<File> planAddFileList = new ArrayList<>();
             for (Mod mod : mGame.getPlanDeleterModlist()) {
-                planDeleteStringList.add(path + mod.getName()+"/");
+                planDeleteStringList.add(path + ModUtils.getModDirName(mod)+"/");
             }
             for (Mod mod : mGame.getPlanAddModlist()) {
-                planAddFileList.add(new File(PathUtils.modPath + mod.getName()));
+                planAddFileList.add(new File(PathUtils.modPath + ModUtils.getModDirName(mod)));
             }
+            mGame.getPlanAddModlist().clear();
+            mGame.getPlanDeleterModlist().clear();
             File backFile = new File(zipFile.getPath() + ".bak");
             zipFile.renameTo(backFile);
             ZipFile backFileZip = null;
@@ -174,7 +188,6 @@ public class GameModListFragment extends BaseFragment {
                         copy(backFileZip.getInputStream(e), append);
                     }
                     publishProgress(e.getName());
-                    Log.d("hydd", "addEntry:"+e.getName());
                     append.closeEntry();
                 }
                 // now append some extra content
@@ -183,7 +196,6 @@ public class GameModListFragment extends BaseFragment {
                 append.close();
             } catch (IOException e) {
                 e.printStackTrace();
-                Log.d("hydd", "erorr::"+e.getLocalizedMessage());
             }
             return false;
         }
@@ -199,6 +211,7 @@ public class GameModListFragment extends BaseFragment {
         protected void onPostExecute(Boolean aBoolean) {
             super.onPostExecute(aBoolean);
             mProgressDialog.hide();
+            mRunnable.run();
         }
 
         static final byte[] BUFFER = new byte[4096 * 1024];
@@ -344,6 +357,7 @@ public class GameModListFragment extends BaseFragment {
         boolean[] isSelect = new boolean[canAddModList.size()];
         for (int i = 0; i < canAddModList.size(); i++) {
             items[i] = canAddModList.get(i).getName();
+//            items[i] = ModUtils.getModDirName(canAddModList.get(i));
             isSelect[i] = false;
         }
 
