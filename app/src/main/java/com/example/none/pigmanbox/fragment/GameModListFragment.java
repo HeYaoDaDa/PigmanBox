@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.blankj.utilcode.util.FileUtils;
 import com.example.none.pigmanbox.R;
 import com.example.none.pigmanbox.adapter.GameModListAdapter;
 import com.example.none.pigmanbox.base.BaseFragment;
@@ -101,25 +102,22 @@ public class GameModListFragment extends BaseFragment {
     public void initEvent() {
         mFloatingActionButton.setOnClickListener(v -> showMultiSelect());
         mFloatingActionButton2.setOnClickListener(v -> {
-            new ModigyZipTask(getActivity(), mGame, new Runnable() {
-                @Override
-                public void run() {
-                    onLazyLoad();
-                    for (Mod mod : planDeleterModlist) {//删除mod的记录
-                        mGame.getModList().remove(mod);
-                    }
-                    for (Mod mod : planAddModlist) {//添加mod的记录
-                        mGame.getModList().add(mod);
-                    }
-                    planAddModlist.clear();
-                    planDeleterModlist.clear();
-                    mGameModListAdapter.notifyDataSetChanged();
+            new ModigyZipTask(getActivity(), mGame, () -> {
+                onLazyLoad();
+                for (Mod mod : planDeleterModlist) {//删除mod的记录
+                    mGame.getModList().remove(mod);
                 }
+                for (Mod mod : planAddModlist) {//添加mod的记录
+                    mGame.getModList().add(mod);
+                }
+                planAddModlist.clear();
+                planDeleterModlist.clear();
+                mGameModListAdapter.notifyDataSetChanged();
             }).execute();
         });
     }
 
-    static class ModigyZipTask extends AsyncTask<Void,String,Boolean>{
+    static class ModigyZipTask extends AsyncTask<Void, String, Boolean> {
         private final WeakReference<Activity> mActity;
         private final Game mGame;
         private final Runnable mRunnable;
@@ -127,7 +125,7 @@ public class GameModListFragment extends BaseFragment {
         private static int mSize;
         private static int mProgress;
 
-        ModigyZipTask(Activity activity, Game game,Runnable mRunnable) {
+        ModigyZipTask(Activity activity, Game game, Runnable mRunnable) {
             this.mActity = new WeakReference<>(activity);
             this.mGame = game;
             this.mRunnable = mRunnable;
@@ -135,7 +133,7 @@ public class GameModListFragment extends BaseFragment {
 
         @Override
         protected void onPreExecute() {
-            mSize =0;
+            mSize = 0;
             mProgress = 0;
             mProgressDialog = new ProgressDialog(mActity.get());
             mProgressDialog.setIcon(GameUtils.getGameIcon(mGame.getPackName()));
@@ -153,7 +151,7 @@ public class GameModListFragment extends BaseFragment {
             List<String> planDeleteStringList = new ArrayList<>();
             List<File> planAddFileList = new ArrayList<>();
             for (Mod mod : mGame.getPlanDeleterModlist()) {
-                planDeleteStringList.add(path + ModUtils.getModDirName(mod)+"/");
+                planDeleteStringList.add(path + ModUtils.getModDirName(mod) + "/");
             }
             for (Mod mod : mGame.getPlanAddModlist()) {
                 planAddFileList.add(new File(PathUtils.modPath + ModUtils.getModDirName(mod)));
@@ -170,12 +168,19 @@ public class GameModListFragment extends BaseFragment {
                 getDeleteZipEntry(deleteZipEntry, backFileZip, planDeleteStringList);
                 // first, copy contents from existing war
                 Enumeration<? extends ZipEntry> entries = backFileZip.entries();
-                mSize-=planDeleteStringList.size();
-                mSize+=planAddFileList.size();
-                while (entries.hasMoreElements()){
-                    entries.nextElement();
-                    mSize++;
+                for (File file : planAddFileList) {
+                    List<File> fileList = FileUtils.listFilesInDirWithFilter(file, pathname -> !pathname.isDirectory(), true);
+                    mSize += fileList.size();
                 }
+                while (entries.hasMoreElements()) {
+                    ZipEntry e = entries.nextElement();
+                    if (deleteZipEntry.contains(e.getName())) {
+                        continue;
+                    }
+                    if (!e.isDirectory())
+                        mSize++;
+                }
+
                 entries = backFileZip.entries();
                 while (entries.hasMoreElements()) {
                     ZipEntry e = entries.nextElement();
@@ -185,13 +190,13 @@ public class GameModListFragment extends BaseFragment {
                     }
                     append.putNextEntry(new ZipEntry(e.getName()));
                     if (!e.isDirectory()) {
+                        publishProgress(e.getName());
                         copy(backFileZip.getInputStream(e), append);
                     }
-                    publishProgress(e.getName());
                     append.closeEntry();
                 }
                 // now append some extra content
-                addZipFile(append, planAddFileList, path,this::publishProgress);
+                addZipFile(append, planAddFileList, path, this::publishProgress);
                 // close
                 append.close();
             } catch (IOException e) {
@@ -203,8 +208,8 @@ public class GameModListFragment extends BaseFragment {
         @Override
         protected void onProgressUpdate(String... values) {
             super.onProgressUpdate(values);
-            mProgressDialog.setTitle("("+(++mProgress)+"/"+mSize+")");
-            mProgressDialog.setMessage("写入:"+values[0]);
+            mProgressDialog.setTitle("(" + (++mProgress) + "/" + mSize + ")");
+            mProgressDialog.setMessage("写入:" + values[0]);
         }
 
         @Override
@@ -215,6 +220,7 @@ public class GameModListFragment extends BaseFragment {
         }
 
         static final byte[] BUFFER = new byte[4096 * 1024];
+
         /**
          * copy input to output stream - available in several StreamUtils or Streams classes
          */
@@ -269,7 +275,7 @@ public class GameModListFragment extends BaseFragment {
          */
         private static void addZipFile(ZipOutputStream zipOutputStream, List<File> fileList, String path, Consumer<String> consumer) throws IOException {
             for (File file : fileList) {
-                addZipFile(zipOutputStream, file, path,consumer);
+                addZipFile(zipOutputStream, file, path, consumer);
             }
         }
 
@@ -284,7 +290,7 @@ public class GameModListFragment extends BaseFragment {
         private static void addZipFile(ZipOutputStream zipOutputStream, File file, String path, Consumer<String> consumer) throws IOException {
             if (file.isDirectory()) {
                 for (File file1 : file.listFiles()) {
-                    addZipFile(zipOutputStream, file1, path + file.getName() + File.separator,consumer);
+                    addZipFile(zipOutputStream, file1, path + file.getName() + File.separator, consumer);
                 }
             } else {
                 BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(file));
