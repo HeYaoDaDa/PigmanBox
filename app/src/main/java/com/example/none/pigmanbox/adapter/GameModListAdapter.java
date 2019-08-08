@@ -80,7 +80,6 @@ public class GameModListAdapter extends RecyclerView.Adapter<GameModListAdapter.
                 stats = 2;
             }
         }
-        Log.d("hydd", "GameAdapter:"+planAddModList);
         if (mod == null)
             return;
 //        String iconUrl = ModUtil.getModIconUrl(mod);

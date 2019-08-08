@@ -20,4 +20,6 @@
         \n你可以通过右下角的添加按钮打开文件管理器
         \n选择mod压缩包或者modinfo.lua文件来加载
     </string>
+    <string name="todo">TODO</string>
+    <string name="SplashText">一个垃圾透顶的mod管理工具</string>
 </resources>
