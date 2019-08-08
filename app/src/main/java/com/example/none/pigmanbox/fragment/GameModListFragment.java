@@ -25,7 +25,9 @@ import com.example.none.pigmanbox.modle.Game;
 import com.example.none.pigmanbox.modle.Mod;
 import com.example.none.pigmanbox.util.GameUtils;
 import com.example.none.pigmanbox.util.ModUtils;
+import com.example.none.pigmanbox.util.MyFileUtils;
 import com.example.none.pigmanbox.util.PathUtils;
+import com.example.none.pigmanbox.util.SettingUtils;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -153,8 +155,20 @@ public class GameModListFragment extends BaseFragment {
             for (Mod mod : mGame.getPlanDeleterModlist()) {
                 planDeleteStringList.add(path + ModUtils.getModDirName(mod) + "/");
             }
+            planDeleteStringList.add("mods/"+SettingUtils.MOD_BMMODS_NAME);
+            planDeleteStringList.add("mods/"+SettingUtils.MOD_MODSETTING_NAME);
+            planDeleteStringList.add("mods/"+SettingUtils.MOD_BMMODS_NAME);
             for (Mod mod : mGame.getPlanAddModlist()) {
                 planAddFileList.add(new File(PathUtils.modPath + ModUtils.getModDirName(mod)));
+            }
+            try {
+                List<Mod> finishMod = mGame.getModList();
+                finishMod.removeAll(mGame.getPlanDeleterModlist());
+                finishMod.addAll(mGame.getPlanAddModlist());
+                List<File> fileList = MyFileUtils.createModsettings(finishMod);
+                planAddFileList.addAll(fileList);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
             mGame.getPlanAddModlist().clear();
             mGame.getPlanDeleterModlist().clear();
@@ -169,8 +183,12 @@ public class GameModListFragment extends BaseFragment {
                 // first, copy contents from existing war
                 Enumeration<? extends ZipEntry> entries = backFileZip.entries();
                 for (File file : planAddFileList) {
-                    List<File> fileList = FileUtils.listFilesInDirWithFilter(file, pathname -> !pathname.isDirectory(), true);
-                    mSize += fileList.size();
+                    if (file.isDirectory()){
+                        List<File> fileList = FileUtils.listFilesInDirWithFilter(file, pathname -> !pathname.isDirectory(), true);
+                        mSize += fileList.size();
+                    }else {
+                        mSize++;
+                    }
                 }
                 while (entries.hasMoreElements()) {
                     ZipEntry e = entries.nextElement();
