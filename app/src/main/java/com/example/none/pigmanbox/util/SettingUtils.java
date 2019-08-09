@@ -11,7 +11,9 @@ public interface SettingUtils {
     public static final String PATH_ANDROID_OBB = PathUtils.getExternalStoragePath() +"/Android/obb/";
     public static final String GAME_PAGE_NAME = "com.kleientertainment.doNotStarve";//backName
     public static final String MOD_MODINFO_NAME = "modinfo.lua";//modinfo.lua
-    public static final String MOD_MODSETTING_NAME = "modsettings.lua";
-    public static final String MOD_DSMODS_NAME = "dsmods";
-    public static final String MOD_BMMODS_NAME = "bmmods";
+    public static final String[] MOD_MODSETTINGS = new String[]{
+            "modsettings.lua",
+            "dsmods",
+            "bmmods"
+    };
 }

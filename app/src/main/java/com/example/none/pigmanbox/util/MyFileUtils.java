@@ -123,9 +123,9 @@ public interface MyFileUtils {
         for (String s:stringList){
             content.append("Add(\"").append(s).append("\")");
         }
-        fileList.add(new File(PathUtils.tempPath + SettingUtils.MOD_MODSETTING_NAME));
-        fileList.add(new File(PathUtils.tempPath + SettingUtils.MOD_DSMODS_NAME));
-        fileList.add(new File(PathUtils.tempPath + SettingUtils.MOD_BMMODS_NAME));
+        for (String data:SettingUtils.MOD_MODSETTINGS){
+            fileList.add(new File(PathUtils.tempPath + data));
+        }
         for (File file : fileList) {
             if (file.exists()){
                 file.delete();

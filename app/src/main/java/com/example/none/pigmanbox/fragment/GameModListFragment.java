@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.blankj.utilcode.util.FileUtils;
 import com.example.none.pigmanbox.R;
@@ -149,29 +150,12 @@ public class GameModListFragment extends BaseFragment {
         @Override
         protected Boolean doInBackground(Void... games) {
             File zipFile = mGame.getObbFile();
-            String path = "mods/";
-            List<String> planDeleteStringList = new ArrayList<>();
-            List<File> planAddFileList = new ArrayList<>();
-            for (Mod mod : mGame.getPlanDeleterModlist()) {
-                planDeleteStringList.add(path + ModUtils.getModDirName(mod) + "/");
-            }
-            planDeleteStringList.add("mods/"+SettingUtils.MOD_BMMODS_NAME);
-            planDeleteStringList.add("mods/"+SettingUtils.MOD_MODSETTING_NAME);
-            planDeleteStringList.add("mods/"+SettingUtils.MOD_BMMODS_NAME);
-            for (Mod mod : mGame.getPlanAddModlist()) {
-                planAddFileList.add(new File(PathUtils.modPath + ModUtils.getModDirName(mod)));
-            }
-            try {
-                List<Mod> finishMod = mGame.getModList();
-                finishMod.removeAll(mGame.getPlanDeleterModlist());
-                finishMod.addAll(mGame.getPlanAddModlist());
-                List<File> fileList = MyFileUtils.createModsettings(finishMod);
-                planAddFileList.addAll(fileList);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            List<String> planDeleteStringList = getPlanDeleteString(mGame);
+            List<File> planAddFileList = getPlanAddFile(mGame);
+
             mGame.getPlanAddModlist().clear();
             mGame.getPlanDeleterModlist().clear();
+
             File backFile = new File(zipFile.getPath() + ".bak");
             zipFile.renameTo(backFile);
             ZipFile backFileZip = null;
@@ -180,47 +164,17 @@ public class GameModListFragment extends BaseFragment {
                 ZipOutputStream append = new ZipOutputStream(new FileOutputStream(zipFile));
                 List<String> deleteZipEntry = new ArrayList<>();
                 getDeleteZipEntry(deleteZipEntry, backFileZip, planDeleteStringList);
-                // first, copy contents from existing war
-                Enumeration<? extends ZipEntry> entries = backFileZip.entries();
-                for (File file : planAddFileList) {
-                    if (file.isDirectory()){
-                        List<File> fileList = FileUtils.listFilesInDirWithFilter(file, pathname -> !pathname.isDirectory(), true);
-                        mSize += fileList.size();
-                    }else {
-                        mSize++;
-                    }
-                }
-                while (entries.hasMoreElements()) {
-                    ZipEntry e = entries.nextElement();
-                    if (deleteZipEntry.contains(e.getName())) {
-                        continue;
-                    }
-                    if (!e.isDirectory())
-                        mSize++;
-                }
 
-                entries = backFileZip.entries();
-                while (entries.hasMoreElements()) {
-                    ZipEntry e = entries.nextElement();
-                    //if e is plan delete entry
-                    if (deleteZipEntry.contains(e.getName())) {
-                        continue;
-                    }
-                    append.putNextEntry(new ZipEntry(e.getName()));
-                    if (!e.isDirectory()) {
-                        publishProgress(e.getName());
-                        copy(backFileZip.getInputStream(e), append);
-                    }
-                    append.closeEntry();
-                }
+                initSize(backFileZip,planDeleteStringList,planAddFileList);
+                copyBackZip(backFileZip,planDeleteStringList,append);
                 // now append some extra content
-                addZipFile(append, planAddFileList, path, this::publishProgress);
+                addZipFile(append, planAddFileList, "mods/", this::publishProgress);
                 // close
                 append.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return false;
+            return true;
         }
 
         @Override
@@ -233,12 +187,13 @@ public class GameModListFragment extends BaseFragment {
         @Override
         protected void onPostExecute(Boolean aBoolean) {
             super.onPostExecute(aBoolean);
+            if (!aBoolean){
+                Toast.makeText(mActity.get(),"失败了。",Toast.LENGTH_SHORT).show();
+            }
             mProgressDialog.hide();
             mRunnable.run();
         }
-
         static final byte[] BUFFER = new byte[4096 * 1024];
-
         /**
          * copy input to output stream - available in several StreamUtils or Streams classes
          */
@@ -250,7 +205,91 @@ public class GameModListFragment extends BaseFragment {
         }
 
         /**
-         * get delete Zip Entry
+         * copy backZipFile to zipFile
+         * @param backFileZip backZipFile
+         * @param deleteZipEntry deleteZipEntry
+         * @param append apped
+         * @throws IOException io
+         */
+        private void copyBackZip(ZipFile backFileZip, List<String> deleteZipEntry, ZipOutputStream append) throws IOException {
+            Enumeration<? extends ZipEntry> entries = backFileZip.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry e = entries.nextElement();
+                //if e is plan delete entry
+                if (deleteZipEntry.contains(e.getName())) {
+                    continue;
+                }
+                append.putNextEntry(new ZipEntry(e.getName()));
+                if (!e.isDirectory()) {
+                    publishProgress(e.getName());
+                    copy(backFileZip.getInputStream(e), append);
+                }
+                append.closeEntry();
+            }
+        }
+        /**
+         * init Size
+         * @param backFileZip zipFile
+         * @param deleteZipEntry plan delete
+         * @param planAddFileList plan add
+         */
+        private void initSize(ZipFile backFileZip,List<String> deleteZipEntry,List<File> planAddFileList){
+            Enumeration<? extends ZipEntry> entries = backFileZip.entries();
+            for (File file : planAddFileList) {
+                if (file.isDirectory()){
+                    List<File> fileList = FileUtils.listFilesInDirWithFilter(file, pathname -> !pathname.isDirectory(), true);
+                    mSize += fileList.size();
+                }else {
+                    mSize++;
+                }
+            }
+            while (entries.hasMoreElements()) {
+                ZipEntry e = entries.nextElement();
+                if (deleteZipEntry.contains(e.getName())) {
+                    continue;
+                }
+                if (!e.isDirectory())
+                    mSize++;
+            }
+        }
+        /**
+         * get Plan Delete Mod File and delete modsetting
+         * @param game game
+         * @return mod dieName list
+         */
+        private static List<String> getPlanDeleteString(Game game){
+            List<String> planDeleteStringList = new ArrayList<>();
+            for (Mod mod : game.getPlanDeleterModlist()) {
+                planDeleteStringList.add("mods/" + ModUtils.getModDirName(mod) + "/");
+            }
+            for (String data:SettingUtils.MOD_MODSETTINGS){
+                planDeleteStringList.add("mods/"+data);
+            }
+            return planDeleteStringList;
+        }
+
+        /**
+         * get Plan Add Mod File and ModSetting file.
+         * @param game game
+         * @return mod dirName
+         */
+        private static List<File> getPlanAddFile(Game game){
+            List<File> planAddFileList = new ArrayList<>();
+            for (Mod mod : game.getPlanAddModlist()) {
+                planAddFileList.add(new File(PathUtils.modPath + ModUtils.getModDirName(mod)));
+            }
+            try {
+                List<Mod> finishMod = game.getModList();
+                finishMod.removeAll(game.getPlanDeleterModlist());
+                finishMod.addAll(game.getPlanAddModlist());
+                planAddFileList.addAll(MyFileUtils.createModsettings(finishMod));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return planAddFileList;
+        }
+        /**
+         * get delete Zip All Entry
          *
          * @param zipEntryList delete Zip Entry
          * @param zipFile      old zip
@@ -263,7 +302,7 @@ public class GameModListFragment extends BaseFragment {
         }
 
         /**
-         * get delete Zip Entry
+         * get delete Zip All Entry
          *
          * @param zipEntryList delete Zip Entry
          * @param zipFile      old zip
